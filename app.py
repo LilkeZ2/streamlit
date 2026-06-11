@@ -6,23 +6,16 @@ st.set_page_config(
     layout="wide"
 )
 
-st.markdown("""
-<style>
-.block-container {
-    max-width: 100%;
-}
-</style>
-""", unsafe_allow_html=True)
-
 html = """
 <!DOCTYPE html>
 <html>
 <head>
 <style>
-body{
+
+html, body{
     margin:0;
-    background:black;
     overflow:hidden;
+    background:black;
 }
 
 canvas{
@@ -31,12 +24,13 @@ canvas{
     background:black;
     border:2px solid white;
 }
+
 </style>
 </head>
 
 <body>
 
-<canvas id="gameCanvas" width="1000" height="500"></canvas>
+<canvas id="gameCanvas" width="700" height="500" tabindex="1"></canvas>
 
 <script>
 
@@ -46,20 +40,22 @@ const ctx = canvas.getContext("2d");
 const paddleWidth = 14;
 const paddleHeight = 100;
 
+const MAX_SPEED = 15;
+
 let playerScore = 0;
 let aiScore = 0;
 
 const player = {
     x: 20,
-    y: canvas.height/2 - paddleHeight/2,
+    y: 200,
     width: paddleWidth,
     height: paddleHeight,
-    speed: 8
+    speed: 10
 };
 
 const ai = {
-    x: canvas.width - 35,
-    y: canvas.height/2 - paddleHeight/2,
+    x: canvas.width - 30,
+    y: 200,
     width: paddleWidth,
     height: paddleHeight,
     speed: 6
@@ -75,12 +71,30 @@ const ball = {
 
 const keys = {};
 
-document.addEventListener("keydown", (e)=>{
-    keys[e.key.toLowerCase()] = true;
+canvas.focus();
+
+document.addEventListener("keydown",(e)=>{
+
+    if(
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown"
+    ){
+        e.preventDefault();
+    }
+
+    keys[e.key] = true;
 });
 
-document.addEventListener("keyup", (e)=>{
-    keys[e.key.toLowerCase()] = false;
+document.addEventListener("keyup",(e)=>{
+
+    if(
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown"
+    ){
+        e.preventDefault();
+    }
+
+    keys[e.key] = false;
 });
 
 function resetBall(){
@@ -88,10 +102,29 @@ function resetBall(){
     ball.x = canvas.width/2;
     ball.y = canvas.height/2;
 
-    let dir = Math.random() > 0.5 ? 1 : -1;
+    const dir = Math.random() > 0.5 ? 1 : -1;
 
     ball.vx = 8 * dir;
-    ball.vy = (Math.random() * 6) - 3;
+    ball.vy = (Math.random()*6)-3;
+}
+
+function increaseSpeed(){
+
+    ball.vx *= 1.03;
+    ball.vy *= 1.03;
+
+    const speed = Math.sqrt(
+        ball.vx*ball.vx +
+        ball.vy*ball.vy
+    );
+
+    if(speed > MAX_SPEED){
+
+        const ratio = MAX_SPEED / speed;
+
+        ball.vx *= ratio;
+        ball.vy *= ratio;
+    }
 }
 
 function drawRect(x,y,w,h){
@@ -101,7 +134,13 @@ function drawRect(x,y,w,h){
 
 function drawBall(){
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.radius,
+        0,
+        Math.PI*2
+    );
     ctx.fillStyle = "white";
     ctx.fill();
 }
@@ -109,7 +148,13 @@ function drawBall(){
 function drawNet(){
 
     for(let i=0;i<canvas.height;i+=30){
-        drawRect(canvas.width/2-1,i,2,18);
+
+        drawRect(
+            canvas.width/2-1,
+            i,
+            2,
+            18
+        );
     }
 }
 
@@ -134,39 +179,44 @@ function drawScore(){
 function collision(ball,paddle){
 
     return (
-        ball.x - ball.radius < paddle.x + paddle.width &&
-        ball.x + ball.radius > paddle.x &&
-        ball.y - ball.radius < paddle.y + paddle.height &&
-        ball.y + ball.radius > paddle.y
+        ball.x - ball.radius <
+        paddle.x + paddle.width &&
+
+        ball.x + ball.radius >
+        paddle.x &&
+
+        ball.y - ball.radius <
+        paddle.y + paddle.height &&
+
+        ball.y + ball.radius >
+        paddle.y
     );
-}
-
-function increaseSpeed(){
-
-    ball.vx *= 1.03;
-    ball.vy *= 1.03;
 }
 
 function update(){
 
     // 플레이어
 
-    if(keys["w"]){
+    if(keys["ArrowUp"]){
         player.y -= player.speed;
     }
 
-    if(keys["s"]){
+    if(keys["ArrowDown"]){
         player.y += player.speed;
     }
 
     player.y = Math.max(
         0,
-        Math.min(canvas.height-player.height, player.y)
+        Math.min(
+            canvas.height-player.height,
+            player.y
+        )
     );
 
     // AI
 
-    let center = ai.y + ai.height/2;
+    const center =
+        ai.y + ai.height/2;
 
     if(center < ball.y - 10){
         ai.y += ai.speed;
@@ -177,7 +227,10 @@ function update(){
 
     ai.y = Math.max(
         0,
-        Math.min(canvas.height-ai.height, ai.y)
+        Math.min(
+            canvas.height-ai.height,
+            ai.y
+        )
     );
 
     // 공 이동
@@ -185,7 +238,7 @@ function update(){
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    // 위아래 벽
+    // 벽 충돌
 
     if(
         ball.y - ball.radius <= 0 ||
@@ -200,8 +253,9 @@ function update(){
 
         ball.vx = Math.abs(ball.vx);
 
-        let impact =
-        (ball.y - (player.y + player.height/2))
+        const impact =
+        (ball.y -
+        (player.y + player.height/2))
         /(player.height/2);
 
         ball.vy = impact * 8;
@@ -215,8 +269,9 @@ function update(){
 
         ball.vx = -Math.abs(ball.vx);
 
-        let impact =
-        (ball.y - (ai.y + ai.height/2))
+        const impact =
+        (ball.y -
+        (ai.y + ai.height/2))
         /(ai.height/2);
 
         ball.vy = impact * 8;
@@ -224,14 +279,16 @@ function update(){
         increaseSpeed();
     }
 
-    // 득점
+    // 점수
 
     if(ball.x < -30){
+
         aiScore++;
         resetBall();
     }
 
     if(ball.x > canvas.width + 30){
+
         playerScore++;
         resetBall();
     }
@@ -278,12 +335,11 @@ resetBall();
 gameLoop();
 
 </script>
-
 </body>
 </html>
 """
 
 st.title("🏓 Pong Game")
-st.write("W = 위 | S = 아래")
+st.write("↑ = 위 | ↓ = 아래")
 
 components.html(html, height=540)
