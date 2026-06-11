@@ -10,6 +10,8 @@ html = """
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
+
 <style>
 
 html, body{
@@ -17,6 +19,8 @@ html, body{
     overflow:hidden;
     background:black;
 }
+
+/* 시작 화면 */
 
 #menu{
     position:absolute;
@@ -38,29 +42,47 @@ html, body{
 }
 
 #menu h1{
-    font-size:60px;
-    margin-bottom:30px;
+    font-size:48px;
+    font-family:Arial, sans-serif;
+    font-weight:bold;
+    margin-bottom:25px;
 }
 
 #menu button{
+
     width:220px;
     height:60px;
+
     margin:10px;
+
     font-size:24px;
+    font-family:Arial, sans-serif;
+    font-weight:bold;
+
     cursor:pointer;
 }
 
 #menu p{
+
     margin-top:20px;
-    color:#aaa;
+
+    font-size:24px;
+    font-family:Arial, sans-serif;
+    font-weight:bold;
+
+    color:white;
 }
 
 canvas{
+
     display:block;
     margin:auto;
+
     background:black;
     border:2px solid white;
-    cursor:none;
+
+    /* 마우스 포인터 보이게 */
+    cursor:default;
 }
 
 </style>
@@ -70,7 +92,7 @@ canvas{
 
 <div id="menu">
 
-    <h1>🏓 PONG GAME</h1>
+    <h1>Pong Game</h1>
 
     <button onclick="startGame('normal')">
         보통
@@ -104,27 +126,37 @@ let playerScore = 0;
 let aiScore = 0;
 
 const player = {
-    x: 20,
-    y: 200,
-    width: paddleWidth,
-    height: paddleHeight
+
+    x:20,
+    y:200,
+
+    width:paddleWidth,
+    height:paddleHeight
 };
 
 const ai = {
-    x: 860,
-    y: 200,
-    width: paddleWidth,
-    height: paddleHeight,
-    speed: AI_SPEED
+
+    x:860,
+    y:200,
+
+    width:paddleWidth,
+    height:paddleHeight,
+
+    speed:AI_SPEED
 };
 
 const ball = {
-    x: 450,
-    y: 250,
-    radius: 10,
-    vx: 0,
-    vy: 0
+
+    x:450,
+    y:250,
+
+    radius:10,
+
+    vx:0,
+    vy:0
 };
+
+/* 난이도 선택 */
 
 function startGame(mode){
 
@@ -150,18 +182,23 @@ function startGame(mode){
     gameStarted = true;
 }
 
-canvas.addEventListener("mousemove", (e)=>{
+/* 마우스 조작 */
 
-    const rect = canvas.getBoundingClientRect();
+canvas.addEventListener("mousemove",(e)=>{
 
-    const mouseY = e.clientY - rect.top;
+    const rect =
+        canvas.getBoundingClientRect();
 
-    player.y = mouseY - player.height / 2;
+    const mouseY =
+        e.clientY - rect.top;
+
+    player.y =
+        mouseY - player.height/2;
 
     player.y = Math.max(
         0,
         Math.min(
-            canvas.height - player.height,
+            canvas.height-player.height,
             player.y
         )
     );
@@ -169,14 +206,20 @@ canvas.addEventListener("mousemove", (e)=>{
 
 function resetBall(){
 
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
+    ball.x =
+        canvas.width/2;
+
+    ball.y =
+        canvas.height/2;
 
     const dir =
         Math.random() > 0.5 ? 1 : -1;
 
-    ball.vx = BALL_SPEED * dir;
-    ball.vy = (Math.random() * 8) - 4;
+    ball.vx =
+        BALL_SPEED * dir;
+
+    ball.vy =
+        (Math.random()*8)-4;
 }
 
 function increaseSpeed(){
@@ -220,7 +263,7 @@ function drawBall(){
         ball.y,
         ball.radius,
         0,
-        Math.PI * 2
+        Math.PI*2
     );
 
     ctx.fillStyle = "white";
@@ -268,21 +311,23 @@ function collision(ball,paddle){
 
     return (
 
-        ball.x - ball.radius
-        < paddle.x + paddle.width &&
+        ball.x - ball.radius <
+        paddle.x + paddle.width &&
 
-        ball.x + ball.radius
-        > paddle.x &&
+        ball.x + ball.radius >
+        paddle.x &&
 
-        ball.y - ball.radius
-        < paddle.y + paddle.height &&
+        ball.y - ball.radius <
+        paddle.y + paddle.height &&
 
-        ball.y + ball.radius
-        > paddle.y
+        ball.y + ball.radius >
+        paddle.y
     );
 }
 
 function update(){
+
+    /* AI */
 
     const center =
         ai.y + ai.height/2;
@@ -304,50 +349,68 @@ function update(){
         )
     );
 
+    /* 공 이동 */
+
     ball.x += ball.vx;
     ball.y += ball.vy;
 
+    /* 위아래 벽 */
+
     if(
+
         ball.y - ball.radius <= 0 ||
-        ball.y + ball.radius >= canvas.height
+
+        ball.y + ball.radius >=
+        canvas.height
+
     ){
 
         ball.vy *= -1;
     }
 
+    /* 플레이어 충돌 */
+
     if(collision(ball,player)){
 
-        ball.vx = Math.abs(ball.vx);
+        ball.vx =
+            Math.abs(ball.vx);
 
         const impact =
 
-        (ball.y -
-        (player.y +
-        player.height/2))
+            (ball.y -
+            (player.y +
+            player.height/2))
 
-        /(player.height/2);
+            /(player.height/2);
 
-        ball.vy = impact * 8;
+        ball.vy =
+            impact * 8;
 
         increaseSpeed();
     }
+
+    /* AI 충돌 */
 
     if(collision(ball,ai)){
 
-        ball.vx = -Math.abs(ball.vx);
+        ball.vx =
+            -Math.abs(ball.vx);
 
         const impact =
 
-        (ball.y -
-        (ai.y +
-        ai.height/2))
+            (ball.y -
+            (ai.y +
+            ai.height/2))
 
-        /(ai.height/2);
+            /(ai.height/2);
 
-        ball.vy = impact * 8;
+        ball.vy =
+            impact * 8;
 
         increaseSpeed();
     }
+
+    /* 득점 */
 
     if(ball.x < -30){
 
