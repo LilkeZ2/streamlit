@@ -1,7 +1,18 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Pong Game", layout="centered")
+st.set_page_config(
+    page_title="🏓 Pong Game",
+    layout="wide"
+)
+
+st.markdown("""
+<style>
+.block-container {
+    max-width: 100%;
+}
+</style>
+""", unsafe_allow_html=True)
 
 html = """
 <!DOCTYPE html>
@@ -13,23 +24,26 @@ body{
     background:black;
     overflow:hidden;
 }
+
 canvas{
     display:block;
     margin:auto;
     background:black;
+    border:2px solid white;
 }
 </style>
 </head>
 
 <body>
-<canvas id="gameCanvas" width="800" height="500"></canvas>
+
+<canvas id="gameCanvas" width="1000" height="500"></canvas>
 
 <script>
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const paddleWidth = 12;
+const paddleWidth = 14;
 const paddleHeight = 100;
 
 let playerScore = 0;
@@ -44,19 +58,19 @@ const player = {
 };
 
 const ai = {
-    x: canvas.width - 32,
+    x: canvas.width - 35,
     y: canvas.height/2 - paddleHeight/2,
     width: paddleWidth,
     height: paddleHeight,
-    speed: 5
+    speed: 6
 };
 
 const ball = {
     x: canvas.width/2,
     y: canvas.height/2,
     radius: 10,
-    vx: 5,
-    vy: 3
+    vx: 8,
+    vy: 5
 };
 
 const keys = {};
@@ -70,13 +84,14 @@ document.addEventListener("keyup", (e)=>{
 });
 
 function resetBall(){
+
     ball.x = canvas.width/2;
     ball.y = canvas.height/2;
 
-    let direction = Math.random() > 0.5 ? 1 : -1;
+    let dir = Math.random() > 0.5 ? 1 : -1;
 
-    ball.vx = 5 * direction;
-    ball.vy = (Math.random()*4)-2;
+    ball.vx = 8 * dir;
+    ball.vy = (Math.random() * 6) - 3;
 }
 
 function drawRect(x,y,w,h){
@@ -92,29 +107,32 @@ function drawBall(){
 }
 
 function drawNet(){
+
     for(let i=0;i<canvas.height;i+=30){
-        drawRect(canvas.width/2-1, i, 2, 18);
+        drawRect(canvas.width/2-1,i,2,18);
     }
 }
 
 function drawScore(){
+
     ctx.fillStyle = "white";
-    ctx.font = "40px Arial";
+    ctx.font = "42px Arial";
 
     ctx.fillText(
         playerScore,
         canvas.width/4,
-        50
+        60
     );
 
     ctx.fillText(
         aiScore,
         canvas.width*3/4,
-        50
+        60
     );
 }
 
 function collision(ball,paddle){
+
     return (
         ball.x - ball.radius < paddle.x + paddle.width &&
         ball.x + ball.radius > paddle.x &&
@@ -123,9 +141,16 @@ function collision(ball,paddle){
     );
 }
 
+function increaseSpeed(){
+
+    ball.vx *= 1.03;
+    ball.vy *= 1.03;
+}
+
 function update(){
 
-    // 플레이어 이동
+    // 플레이어
+
     if(keys["w"]){
         player.y -= player.speed;
     }
@@ -139,13 +164,14 @@ function update(){
         Math.min(canvas.height-player.height, player.y)
     );
 
-    // AI 이동
-    let aiCenter = ai.y + ai.height/2;
+    // AI
 
-    if(aiCenter < ball.y - 15){
+    let center = ai.y + ai.height/2;
+
+    if(center < ball.y - 10){
         ai.y += ai.speed;
     }
-    else if(aiCenter > ball.y + 15){
+    else if(center > ball.y + 10){
         ai.y -= ai.speed;
     }
 
@@ -155,10 +181,12 @@ function update(){
     );
 
     // 공 이동
+
     ball.x += ball.vx;
     ball.y += ball.vy;
 
     // 위아래 벽
+
     if(
         ball.y - ball.radius <= 0 ||
         ball.y + ball.radius >= canvas.height
@@ -166,7 +194,8 @@ function update(){
         ball.vy *= -1;
     }
 
-    // 왼쪽 패들
+    // 플레이어 충돌
+
     if(collision(ball,player)){
 
         ball.vx = Math.abs(ball.vx);
@@ -175,10 +204,13 @@ function update(){
         (ball.y - (player.y + player.height/2))
         /(player.height/2);
 
-        ball.vy = impact * 6;
+        ball.vy = impact * 8;
+
+        increaseSpeed();
     }
 
-    // 오른쪽 패들
+    // AI 충돌
+
     if(collision(ball,ai)){
 
         ball.vx = -Math.abs(ball.vx);
@@ -187,16 +219,19 @@ function update(){
         (ball.y - (ai.y + ai.height/2))
         /(ai.height/2);
 
-        ball.vy = impact * 6;
+        ball.vy = impact * 8;
+
+        increaseSpeed();
     }
 
-    // 점수 처리
-    if(ball.x < -20){
+    // 득점
+
+    if(ball.x < -30){
         aiScore++;
         resetBall();
     }
 
-    if(ball.x > canvas.width + 20){
+    if(ball.x > canvas.width + 30){
         playerScore++;
         resetBall();
     }
@@ -214,7 +249,6 @@ function render(){
     drawNet();
     drawScore();
 
-    // 플레이어
     drawRect(
         player.x,
         player.y,
@@ -222,7 +256,6 @@ function render(){
         player.height
     );
 
-    // AI
     drawRect(
         ai.x,
         ai.y,
@@ -234,8 +267,10 @@ function render(){
 }
 
 function gameLoop(){
+
     update();
     render();
+
     requestAnimationFrame(gameLoop);
 }
 
@@ -243,11 +278,12 @@ resetBall();
 gameLoop();
 
 </script>
+
 </body>
 </html>
 """
 
 st.title("🏓 Pong Game")
-st.write("W = 위  |  S = 아래")
+st.write("W = 위 | S = 아래")
 
-components.html(html, height=550)
+components.html(html, height=540)
