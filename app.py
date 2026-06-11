@@ -23,6 +23,7 @@ canvas{
     margin:auto;
     background:black;
     border:2px solid white;
+    cursor:none;
 }
 
 </style>
@@ -30,7 +31,7 @@ canvas{
 
 <body>
 
-<canvas id="gameCanvas" width="700" height="500" tabindex="1"></canvas>
+<canvas id="gameCanvas" width="700" height="500"></canvas>
 
 <script>
 
@@ -40,7 +41,7 @@ const ctx = canvas.getContext("2d");
 const paddleWidth = 14;
 const paddleHeight = 100;
 
-const MAX_SPEED = 15;
+const MAX_SPEED = 16;
 
 let playerScore = 0;
 let aiScore = 0;
@@ -49,8 +50,7 @@ const player = {
     x: 20,
     y: 200,
     width: paddleWidth,
-    height: paddleHeight,
-    speed: 10
+    height: paddleHeight
 };
 
 const ai = {
@@ -58,43 +58,33 @@ const ai = {
     y: 200,
     width: paddleWidth,
     height: paddleHeight,
-    speed: 6
+    speed: 8
 };
 
 const ball = {
     x: canvas.width/2,
     y: canvas.height/2,
     radius: 10,
-    vx: 8,
+    vx: 9,
     vy: 5
 };
 
-const keys = {};
+// 마우스 조작
+canvas.addEventListener("mousemove", (e) => {
 
-canvas.focus();
+    const rect = canvas.getBoundingClientRect();
 
-document.addEventListener("keydown",(e)=>{
+    const mouseY = e.clientY - rect.top;
 
-    if(
-        e.key === "ArrowUp" ||
-        e.key === "ArrowDown"
-    ){
-        e.preventDefault();
-    }
+    player.y = mouseY - player.height / 2;
 
-    keys[e.key] = true;
-});
-
-document.addEventListener("keyup",(e)=>{
-
-    if(
-        e.key === "ArrowUp" ||
-        e.key === "ArrowDown"
-    ){
-        e.preventDefault();
-    }
-
-    keys[e.key] = false;
+    player.y = Math.max(
+        0,
+        Math.min(
+            canvas.height - player.height,
+            player.y
+        )
+    );
 });
 
 function resetBall(){
@@ -104,8 +94,8 @@ function resetBall(){
 
     const dir = Math.random() > 0.5 ? 1 : -1;
 
-    ball.vx = 8 * dir;
-    ball.vy = (Math.random()*6)-3;
+    ball.vx = 9 * dir;
+    ball.vy = (Math.random() * 6) - 3;
 }
 
 function increaseSpeed(){
@@ -114,8 +104,8 @@ function increaseSpeed(){
     ball.vy *= 1.03;
 
     const speed = Math.sqrt(
-        ball.vx*ball.vx +
-        ball.vy*ball.vy
+        ball.vx * ball.vx +
+        ball.vy * ball.vy
     );
 
     if(speed > MAX_SPEED){
@@ -133,14 +123,17 @@ function drawRect(x,y,w,h){
 }
 
 function drawBall(){
+
     ctx.beginPath();
+
     ctx.arc(
         ball.x,
         ball.y,
         ball.radius,
         0,
-        Math.PI*2
+        Math.PI * 2
     );
+
     ctx.fillStyle = "white";
     ctx.fill();
 }
@@ -195,33 +188,15 @@ function collision(ball,paddle){
 
 function update(){
 
-    // 플레이어
-
-    if(keys["ArrowUp"]){
-        player.y -= player.speed;
-    }
-
-    if(keys["ArrowDown"]){
-        player.y += player.speed;
-    }
-
-    player.y = Math.max(
-        0,
-        Math.min(
-            canvas.height-player.height,
-            player.y
-        )
-    );
-
-    // AI
+    // AI 이동
 
     const center =
         ai.y + ai.height/2;
 
-    if(center < ball.y - 10){
+    if(center < ball.y - 15){
         ai.y += ai.speed;
     }
-    else if(center > ball.y + 10){
+    else if(center > ball.y + 15){
         ai.y -= ai.speed;
     }
 
@@ -335,11 +310,12 @@ resetBall();
 gameLoop();
 
 </script>
+
 </body>
 </html>
 """
 
 st.title("🏓 Pong Game")
-st.write("↑ = 위 | ↓ = 아래")
+st.write("🖱️ 마우스를 움직여 패들을 조작하세요")
 
 components.html(html, height=540)
