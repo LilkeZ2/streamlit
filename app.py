@@ -6,45 +6,83 @@ st.set_page_config(
     layout="wide"
 )
 
-with st.expander("⚙️ 설정"):
-    difficulty = st.selectbox(
-        "난이도 선택",
-        ["보통", "어려움"]
-    )
-
-if difficulty == "보통":
-    ball_speed = 9
-    ai_speed = 8
-    max_speed = 16
-else:
-    ball_speed = 11.7
-    ai_speed = 12
-    max_speed = 20
-
-html = f"""
+html = """
 <!DOCTYPE html>
 <html>
 <head>
 <style>
 
-html, body {{
-    margin: 0;
-    overflow: hidden;
-    background: black;
-}}
+html, body{
+    margin:0;
+    overflow:hidden;
+    background:black;
+}
 
-canvas {{
-    display: block;
-    margin: auto;
-    background: black;
-    border: 2px solid white;
-    cursor: none;
-}}
+#menu{
+    position:absolute;
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    background:black;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    color:white;
+    z-index:100;
+}
+
+#menu h1{
+    font-size:60px;
+    margin-bottom:30px;
+}
+
+#menu button{
+    width:220px;
+    height:60px;
+    margin:10px;
+    font-size:24px;
+    cursor:pointer;
+}
+
+#menu p{
+    margin-top:20px;
+    color:#aaa;
+}
+
+canvas{
+    display:block;
+    margin:auto;
+    background:black;
+    border:2px solid white;
+    cursor:none;
+}
 
 </style>
 </head>
 
 <body>
+
+<div id="menu">
+
+    <h1>🏓 PONG GAME</h1>
+
+    <button onclick="startGame('normal')">
+        보통
+    </button>
+
+    <button onclick="startGame('hard')">
+        어려움
+    </button>
+
+    <p>난이도를 선택해서 시작하세요</p>
+
+</div>
 
 <canvas id="gameCanvas" width="900" height="500"></canvas>
 
@@ -56,39 +94,63 @@ const ctx = canvas.getContext("2d");
 const paddleWidth = 14;
 const paddleHeight = 100;
 
-const BALL_SPEED = {ball_speed};
-const AI_SPEED = {ai_speed};
-const MAX_SPEED = {max_speed};
+let BALL_SPEED = 9;
+let AI_SPEED = 8;
+let MAX_SPEED = 16;
+
+let gameStarted = false;
 
 let playerScore = 0;
 let aiScore = 0;
 
-const player = {{
+const player = {
     x: 20,
     y: 200,
     width: paddleWidth,
     height: paddleHeight
-}};
+};
 
-const ai = {{
-    x: canvas.width - 40,
+const ai = {
+    x: 860,
     y: 200,
     width: paddleWidth,
     height: paddleHeight,
     speed: AI_SPEED
-}};
+};
 
-const ball = {{
-    x: canvas.width/2,
-    y: canvas.height/2,
+const ball = {
+    x: 450,
+    y: 250,
     radius: 10,
-    vx: BALL_SPEED,
-    vy: BALL_SPEED * 0.55
-}};
+    vx: 0,
+    vy: 0
+};
 
-// 마우스 조작
+function startGame(mode){
 
-canvas.addEventListener("mousemove", (e) => {{
+    if(mode === "normal"){
+
+        BALL_SPEED = 9;
+        AI_SPEED = 8;
+        MAX_SPEED = 16;
+    }
+    else{
+
+        BALL_SPEED = 11.7;
+        AI_SPEED = 12;
+        MAX_SPEED = 20;
+    }
+
+    ai.speed = AI_SPEED;
+
+    document.getElementById("menu").style.display = "none";
+
+    resetBall();
+
+    gameStarted = true;
+}
+
+canvas.addEventListener("mousemove", (e)=>{
 
     const rect = canvas.getBoundingClientRect();
 
@@ -103,20 +165,21 @@ canvas.addEventListener("mousemove", (e) => {{
             player.y
         )
     );
-}});
+});
 
-function resetBall() {{
+function resetBall(){
 
-    ball.x = canvas.width/2;
-    ball.y = canvas.height/2;
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
 
-    const dir = Math.random() > 0.5 ? 1 : -1;
+    const dir =
+        Math.random() > 0.5 ? 1 : -1;
 
     ball.vx = BALL_SPEED * dir;
     ball.vy = (Math.random() * 8) - 4;
-}}
+}
 
-function increaseSpeed() {{
+function increaseSpeed(){
 
     ball.vx *= 1.03;
     ball.vy *= 1.03;
@@ -126,21 +189,29 @@ function increaseSpeed() {{
         ball.vy * ball.vy
     );
 
-    if(speed > MAX_SPEED) {{
+    if(speed > MAX_SPEED){
 
-        const ratio = MAX_SPEED / speed;
+        const ratio =
+            MAX_SPEED / speed;
 
         ball.vx *= ratio;
         ball.vy *= ratio;
-    }}
-}}
+    }
+}
 
-function drawRect(x,y,w,h) {{
+function drawRect(x,y,w,h){
+
     ctx.fillStyle = "white";
-    ctx.fillRect(x,y,w,h);
-}}
 
-function drawBall() {{
+    ctx.fillRect(
+        x,
+        y,
+        w,
+        h
+    );
+}
+
+function drawBall(){
 
     ctx.beginPath();
 
@@ -153,12 +224,17 @@ function drawBall() {{
     );
 
     ctx.fillStyle = "white";
+
     ctx.fill();
-}}
+}
 
-function drawNet() {{
+function drawNet(){
 
-    for(let i=0;i<canvas.height;i+=30) {{
+    for(
+        let i=0;
+        i<canvas.height;
+        i+=30
+    ){
 
         drawRect(
             canvas.width/2-1,
@@ -166,12 +242,13 @@ function drawNet() {{
             2,
             18
         );
-    }}
-}}
+    }
+}
 
-function drawScore() {{
+function drawScore(){
 
     ctx.fillStyle = "white";
+
     ctx.font = "42px Arial";
 
     ctx.fillText(
@@ -185,38 +262,39 @@ function drawScore() {{
         canvas.width*3/4,
         60
     );
-}}
+}
 
-function collision(ball,paddle) {{
+function collision(ball,paddle){
 
     return (
-        ball.x - ball.radius <
-        paddle.x + paddle.width &&
 
-        ball.x + ball.radius >
-        paddle.x &&
+        ball.x - ball.radius
+        < paddle.x + paddle.width &&
 
-        ball.y - ball.radius <
-        paddle.y + paddle.height &&
+        ball.x + ball.radius
+        > paddle.x &&
 
-        ball.y + ball.radius >
-        paddle.y
+        ball.y - ball.radius
+        < paddle.y + paddle.height &&
+
+        ball.y + ball.radius
+        > paddle.y
     );
-}}
+}
 
-function update() {{
-
-    // AI 이동
+function update(){
 
     const center =
         ai.y + ai.height/2;
 
-    if(center < ball.y - 15) {{
+    if(center < ball.y - 15){
+
         ai.y += ai.speed;
-    }}
-    else if(center > ball.y + 15) {{
+    }
+    else if(center > ball.y + 15){
+
         ai.y -= ai.speed;
-    }}
+    }
 
     ai.y = Math.max(
         0,
@@ -226,68 +304,67 @@ function update() {{
         )
     );
 
-    // 공 이동
-
     ball.x += ball.vx;
     ball.y += ball.vy;
-
-    // 벽 충돌
 
     if(
         ball.y - ball.radius <= 0 ||
         ball.y + ball.radius >= canvas.height
-    ) {{
+    ){
+
         ball.vy *= -1;
-    }}
+    }
 
-    // 플레이어 충돌
-
-    if(collision(ball,player)) {{
+    if(collision(ball,player)){
 
         ball.vx = Math.abs(ball.vx);
 
         const impact =
+
         (ball.y -
-        (player.y + player.height/2))
+        (player.y +
+        player.height/2))
+
         /(player.height/2);
 
         ball.vy = impact * 8;
 
         increaseSpeed();
-    }}
+    }
 
-    // AI 충돌
-
-    if(collision(ball,ai)) {{
+    if(collision(ball,ai)){
 
         ball.vx = -Math.abs(ball.vx);
 
         const impact =
+
         (ball.y -
-        (ai.y + ai.height/2))
+        (ai.y +
+        ai.height/2))
+
         /(ai.height/2);
 
         ball.vy = impact * 8;
 
         increaseSpeed();
-    }}
+    }
 
-    // 득점
-
-    if(ball.x < -30) {{
+    if(ball.x < -30){
 
         aiScore++;
-        resetBall();
-    }}
 
-    if(ball.x > canvas.width + 30) {{
+        resetBall();
+    }
+
+    if(ball.x > canvas.width + 30){
 
         playerScore++;
-        resetBall();
-    }}
-}}
 
-function render() {{
+        resetBall();
+    }
+}
+
+function render(){
 
     ctx.clearRect(
         0,
@@ -314,17 +391,22 @@ function render() {{
     );
 
     drawBall();
-}}
+}
 
-function gameLoop() {{
+function gameLoop(){
 
-    update();
+    if(gameStarted){
+
+        update();
+    }
+
     render();
 
-    requestAnimationFrame(gameLoop);
-}}
+    requestAnimationFrame(
+        gameLoop
+    );
+}
 
-resetBall();
 gameLoop();
 
 </script>
