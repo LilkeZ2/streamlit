@@ -6,25 +6,40 @@ st.set_page_config(
     layout="wide"
 )
 
-html = """
+with st.expander("⚙️ 설정"):
+    difficulty = st.selectbox(
+        "난이도 선택",
+        ["보통", "어려움"]
+    )
+
+if difficulty == "보통":
+    ball_speed = 9
+    ai_speed = 8
+    max_speed = 16
+else:
+    ball_speed = 11.7
+    ai_speed = 12
+    max_speed = 20
+
+html = f"""
 <!DOCTYPE html>
 <html>
 <head>
 <style>
 
-html, body{
-    margin:0;
-    overflow:hidden;
-    background:black;
-}
+html, body {{
+    margin: 0;
+    overflow: hidden;
+    background: black;
+}}
 
-canvas{
-    display:block;
-    margin:auto;
-    background:black;
-    border:2px solid white;
-    cursor:none;
-}
+canvas {{
+    display: block;
+    margin: auto;
+    background: black;
+    border: 2px solid white;
+    cursor: none;
+}}
 
 </style>
 </head>
@@ -41,39 +56,39 @@ const ctx = canvas.getContext("2d");
 const paddleWidth = 14;
 const paddleHeight = 100;
 
-const MAX_SPEED = 16;
+const BALL_SPEED = {ball_speed};
+const AI_SPEED = {ai_speed};
+const MAX_SPEED = {max_speed};
 
 let playerScore = 0;
 let aiScore = 0;
 
-let skillReady = true;
-
-const player = {
+const player = {{
     x: 20,
     y: 200,
     width: paddleWidth,
     height: paddleHeight
-};
+}};
 
-const ai = {
+const ai = {{
     x: canvas.width - 40,
     y: 200,
     width: paddleWidth,
     height: paddleHeight,
-    speed: 8
-};
+    speed: AI_SPEED
+}};
 
-const ball = {
+const ball = {{
     x: canvas.width/2,
     y: canvas.height/2,
     radius: 10,
-    vx: 9,
-    vy: 5
-};
+    vx: BALL_SPEED,
+    vy: BALL_SPEED * 0.55
+}};
 
 // 마우스 조작
 
-canvas.addEventListener("mousemove", (e) => {
+canvas.addEventListener("mousemove", (e) => {{
 
     const rect = canvas.getBoundingClientRect();
 
@@ -88,38 +103,20 @@ canvas.addEventListener("mousemove", (e) => {
             player.y
         )
     );
-});
+}});
 
-// Q 스킬
-
-document.addEventListener("keydown", (e)=>{
-
-    if(
-        (e.key === "q" || e.key === "Q")
-        && skillReady
-    ){
-
-        ball.vx *= 2;
-        ball.vy *= 2;
-
-        skillReady = false;
-    }
-});
-
-function resetBall(){
-
-    skillReady = true;
+function resetBall() {{
 
     ball.x = canvas.width/2;
     ball.y = canvas.height/2;
 
     const dir = Math.random() > 0.5 ? 1 : -1;
 
-    ball.vx = 9 * dir;
-    ball.vy = (Math.random()*6)-3;
-}
+    ball.vx = BALL_SPEED * dir;
+    ball.vy = (Math.random() * 8) - 4;
+}}
 
-function increaseSpeed(){
+function increaseSpeed() {{
 
     ball.vx *= 1.03;
     ball.vy *= 1.03;
@@ -129,21 +126,21 @@ function increaseSpeed(){
         ball.vy * ball.vy
     );
 
-    if(speed > MAX_SPEED){
+    if(speed > MAX_SPEED) {{
 
         const ratio = MAX_SPEED / speed;
 
         ball.vx *= ratio;
         ball.vy *= ratio;
-    }
-}
+    }}
+}}
 
-function drawRect(x,y,w,h){
+function drawRect(x,y,w,h) {{
     ctx.fillStyle = "white";
     ctx.fillRect(x,y,w,h);
-}
+}}
 
-function drawBall(){
+function drawBall() {{
 
     ctx.beginPath();
 
@@ -157,11 +154,11 @@ function drawBall(){
 
     ctx.fillStyle = "white";
     ctx.fill();
-}
+}}
 
-function drawNet(){
+function drawNet() {{
 
-    for(let i=0;i<canvas.height;i+=30){
+    for(let i=0;i<canvas.height;i+=30) {{
 
         drawRect(
             canvas.width/2-1,
@@ -169,10 +166,10 @@ function drawNet(){
             2,
             18
         );
-    }
-}
+    }}
+}}
 
-function drawScore(){
+function drawScore() {{
 
     ctx.fillStyle = "white";
     ctx.font = "42px Arial";
@@ -188,35 +185,9 @@ function drawScore(){
         canvas.width*3/4,
         60
     );
-}
+}}
 
-function drawSkill(){
-
-    ctx.font = "20px Arial";
-
-    if(skillReady){
-
-        ctx.fillStyle = "lime";
-
-        ctx.fillText(
-            "Q SKILL READY",
-            20,
-            30
-        );
-    }
-    else{
-
-        ctx.fillStyle = "red";
-
-        ctx.fillText(
-            "Q SKILL USED",
-            20,
-            30
-        );
-    }
-}
-
-function collision(ball,paddle){
+function collision(ball,paddle) {{
 
     return (
         ball.x - ball.radius <
@@ -231,21 +202,21 @@ function collision(ball,paddle){
         ball.y + ball.radius >
         paddle.y
     );
-}
+}}
 
-function update(){
+function update() {{
 
-    // AI
+    // AI 이동
 
     const center =
         ai.y + ai.height/2;
 
-    if(center < ball.y - 15){
+    if(center < ball.y - 15) {{
         ai.y += ai.speed;
-    }
-    else if(center > ball.y + 15){
+    }}
+    else if(center > ball.y + 15) {{
         ai.y -= ai.speed;
-    }
+    }}
 
     ai.y = Math.max(
         0,
@@ -265,13 +236,13 @@ function update(){
     if(
         ball.y - ball.radius <= 0 ||
         ball.y + ball.radius >= canvas.height
-    ){
+    ) {{
         ball.vy *= -1;
-    }
+    }}
 
     // 플레이어 충돌
 
-    if(collision(ball,player)){
+    if(collision(ball,player)) {{
 
         ball.vx = Math.abs(ball.vx);
 
@@ -283,11 +254,11 @@ function update(){
         ball.vy = impact * 8;
 
         increaseSpeed();
-    }
+    }}
 
     // AI 충돌
 
-    if(collision(ball,ai)){
+    if(collision(ball,ai)) {{
 
         ball.vx = -Math.abs(ball.vx);
 
@@ -299,24 +270,24 @@ function update(){
         ball.vy = impact * 8;
 
         increaseSpeed();
-    }
+    }}
 
     // 득점
 
-    if(ball.x < -30){
+    if(ball.x < -30) {{
 
         aiScore++;
         resetBall();
-    }
+    }}
 
-    if(ball.x > canvas.width + 30){
+    if(ball.x > canvas.width + 30) {{
 
         playerScore++;
         resetBall();
-    }
-}
+    }}
+}}
 
-function render(){
+function render() {{
 
     ctx.clearRect(
         0,
@@ -327,7 +298,6 @@ function render(){
 
     drawNet();
     drawScore();
-    drawSkill();
 
     drawRect(
         player.x,
@@ -344,15 +314,15 @@ function render(){
     );
 
     drawBall();
-}
+}}
 
-function gameLoop(){
+function gameLoop() {{
 
     update();
     render();
 
     requestAnimationFrame(gameLoop);
-}
+}}
 
 resetBall();
 gameLoop();
@@ -364,6 +334,6 @@ gameLoop();
 """
 
 st.title("🏓 Pong Game")
-st.write("🖱️ 마우스로 패들을 움직이세요 | 🚀 Q = 속도 2배 스킬 (1회)")
+st.write("🖱️ 마우스로 패들을 움직이세요")
 
 components.html(html, height=540)
