@@ -31,7 +31,7 @@ canvas{
 
 <body>
 
-<canvas id="gameCanvas" width="700" height="500"></canvas>
+<canvas id="gameCanvas" width="900" height="500"></canvas>
 
 <script>
 
@@ -46,6 +46,8 @@ const MAX_SPEED = 16;
 let playerScore = 0;
 let aiScore = 0;
 
+let skillReady = true;
+
 const player = {
     x: 20,
     y: 200,
@@ -54,7 +56,7 @@ const player = {
 };
 
 const ai = {
-    x: canvas.width - 30,
+    x: canvas.width - 40,
     y: 200,
     width: paddleWidth,
     height: paddleHeight,
@@ -70,6 +72,7 @@ const ball = {
 };
 
 // 마우스 조작
+
 canvas.addEventListener("mousemove", (e) => {
 
     const rect = canvas.getBoundingClientRect();
@@ -87,7 +90,25 @@ canvas.addEventListener("mousemove", (e) => {
     );
 });
 
+// Q 스킬
+
+document.addEventListener("keydown", (e)=>{
+
+    if(
+        (e.key === "q" || e.key === "Q")
+        && skillReady
+    ){
+
+        ball.vx *= 2;
+        ball.vy *= 2;
+
+        skillReady = false;
+    }
+});
+
 function resetBall(){
+
+    skillReady = true;
 
     ball.x = canvas.width/2;
     ball.y = canvas.height/2;
@@ -95,7 +116,7 @@ function resetBall(){
     const dir = Math.random() > 0.5 ? 1 : -1;
 
     ball.vx = 9 * dir;
-    ball.vy = (Math.random() * 6) - 3;
+    ball.vy = (Math.random()*6)-3;
 }
 
 function increaseSpeed(){
@@ -169,6 +190,32 @@ function drawScore(){
     );
 }
 
+function drawSkill(){
+
+    ctx.font = "20px Arial";
+
+    if(skillReady){
+
+        ctx.fillStyle = "lime";
+
+        ctx.fillText(
+            "Q SKILL READY",
+            20,
+            30
+        );
+    }
+    else{
+
+        ctx.fillStyle = "red";
+
+        ctx.fillText(
+            "Q SKILL USED",
+            20,
+            30
+        );
+    }
+}
+
 function collision(ball,paddle){
 
     return (
@@ -188,7 +235,7 @@ function collision(ball,paddle){
 
 function update(){
 
-    // AI 이동
+    // AI
 
     const center =
         ai.y + ai.height/2;
@@ -254,7 +301,7 @@ function update(){
         increaseSpeed();
     }
 
-    // 점수
+    // 득점
 
     if(ball.x < -30){
 
@@ -280,6 +327,7 @@ function render(){
 
     drawNet();
     drawScore();
+    drawSkill();
 
     drawRect(
         player.x,
@@ -316,6 +364,6 @@ gameLoop();
 """
 
 st.title("🏓 Pong Game")
-st.write("🖱️ 마우스를 움직여 패들을 조작하세요")
+st.write("🖱️ 마우스로 패들을 움직이세요 | 🚀 Q = 속도 2배 스킬 (1회)")
 
 components.html(html, height=540)
